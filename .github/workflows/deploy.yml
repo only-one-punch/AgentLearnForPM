@@ -70,6 +70,53 @@ jobs:
           SSH_USER: ${{ secrets.SSH_USER }}
           REPO_URL: git@github.com:${{ github.repository }}.git
         run: |
-          ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
-            "DEPLOY_PATH='$DEPLOY_PATH' REPO_URL='$REPO_URL' BRANCH='$DEPLOY_BRANCH' ENV_FILE='$ENV_FILE' bash -s" \
-            < scripts/server-deploy.sh
+          deploy_id="github-${{ github.run_id }}"
+
+          ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" \
+            "DEPLOY_PATH='$DEPLOY_PATH' REPO_URL='$REPO_URL' BRANCH='$DEPLOY_BRANCH' ENV_FILE='$ENV_FILE' DEPLOY_ID='$deploy_id' bash -s" <<'REMOTE'
+          set -Eeuo pipefail
+
+          parent_dir="$(dirname "$DEPLOY_PATH")"
+          mkdir -p "$parent_dir"
+
+          if [ ! -d "$DEPLOY_PATH/.git" ]; then
+            git clone --branch "$BRANCH" "$REPO_URL" "$DEPLOY_PATH"
+          fi
+
+          cd "$DEPLOY_PATH"
+          git fetch origin "$BRANCH"
+          git checkout "$BRANCH"
+          git pull --ff-only origin "$BRANCH"
+
+          bash scripts/server-deploy-async.sh
+          REMOTE
+
+          status_file="$DEPLOY_PATH/.deploy-logs/$deploy_id.status"
+          log_file="$DEPLOY_PATH/.deploy-logs/$deploy_id.log"
+
+          for attempt in {1..90}; do
+            status="$(ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "cat '$status_file' 2>/dev/null || echo missing")"
+            echo "Deploy status: $status (attempt $attempt/90)"
+
+            if [ "$status" = "success" ]; then
+              ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "tail -n 80 '$log_file'"
+              exit 0
+            fi
+
+            if [ "$status" = "failure" ]; then
+              ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "tail -n 160 '$log_file'"
+              exit 1
+            fi
+
+            if [ "$attempt" -eq 90 ]; then
+              echo "Deploy did not finish in time."
+              ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "tail -n 160 '$log_file' || true"
+              exit 1
+            fi
+
+            if [ $((attempt % 6)) -eq 0 ]; then
+              ssh -o ServerAliveInterval=30 -o ServerAliveCountMax=20 -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "tail -n 40 '$log_file' || true"
+            fi
+
+            sleep 20
+          done
