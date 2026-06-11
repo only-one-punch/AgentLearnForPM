@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import GithubSlugger from "github-slugger";
 import { toString } from "mdast-util-to-string";
@@ -448,7 +448,10 @@ function makeSearchRecords(sections, terms, selfTests) {
 
 function writeArtifact(name, value) {
   mkdirSync(outputDir, { recursive: true });
-  writeFileSync(resolve(outputDir, name), stableJson(value));
+  const artifactPath = resolve(outputDir, name);
+  const tempPath = resolve(outputDir, `.${name}.${process.pid}.tmp`);
+  writeFileSync(tempPath, stableJson(value));
+  renameSync(tempPath, artifactPath);
 }
 
 function main() {
