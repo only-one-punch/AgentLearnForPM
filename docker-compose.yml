@@ -1,0 +1,43 @@
+services:
+  workbench:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
+        NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-}
+    image: agent-pm-knowledge-workbench:latest
+    container_name: agent-pm-knowledge-workbench
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
+      DATA_DIR: /app/data
+      DATABASE_PATH: /app/data/workbench.sqlite
+      WORKBENCH_DB_PATH: /app/data/workbench.sqlite
+      GENERATED_CONTENT_DIR: /app/.generated/knowledge
+      KNOWLEDGE_ARTIFACT_DIR: /app/.generated/knowledge
+      CONTENT_SOURCE_DIR: agent-pm-tech-knowledge
+      CONTENT_REPO_DIR: /app
+      BACKUP_DIR: /app/backups
+    ports:
+      - "127.0.0.1:${HOST_PORT:-3000}:3000"
+    volumes:
+      - ${WORKBENCH_DATA_MOUNT:-workbench-data}:/app/data
+      - ${WORKBENCH_GENERATED_MOUNT:-workbench-generated}:/app/.generated/knowledge
+      - ${WORKBENCH_BACKUP_MOUNT:-./backups}:/app/backups
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- \"http://127.0.0.1:3000$${NEXT_PUBLIC_BASE_PATH:-}/api/health\" >/dev/null 2>&1 || wget -qO- \"http://127.0.0.1:3000$${NEXT_PUBLIC_BASE_PATH:-}/login\" >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  workbench-data:
+  workbench-generated:

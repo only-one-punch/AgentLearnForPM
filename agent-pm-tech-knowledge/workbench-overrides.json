@@ -1,0 +1,23 @@
+{
+  "$schema": "../lib/content/overrides.schema.json",
+  "selfTests": {},
+  "terms": {},
+  "documents": {
+    "00-Agent-PM-技术知识总览.md": { "slug": "00-agent-pm-overview" },
+    "01-LLM基础.md": { "slug": "01-llm-basics" },
+    "02-Agent基础.md": { "slug": "02-agent-basics" },
+    "03-Agent架构总览.md": { "slug": "03-agent-architecture" },
+    "04-Tool-Calling工具调用.md": { "slug": "04-tool-calling" },
+    "05-RAG知识库与检索增强.md": { "slug": "05-rag-knowledge-retrieval" },
+    "06-Memory记忆系统.md": { "slug": "06-memory-systems" },
+    "07-Workflow编排与自动化.md": { "slug": "07-workflow-orchestration" },
+    "08-Multi-Agent多智能体.md": { "slug": "08-multi-agent" },
+    "09-Eval评测体系.md": { "slug": "09-evaluation" },
+    "10-稳定性成本与性能.md": { "slug": "10-reliability-cost-performance" },
+    "11-安全权限与合规.md": { "slug": "11-safety-permissions-compliance" },
+    "12-Agent产品化方法.md": { "slug": "12-agent-productization" },
+    "13-常见技术面试题.md": { "slug": "13-technical-interview-questions" },
+    "14-Agent产品设计题答题框架.md": { "slug": "14-agent-product-design-framework" },
+    "15-术语表与速查表.md": { "slug": "15-terminology-cheatsheet" }
+  }
+}
