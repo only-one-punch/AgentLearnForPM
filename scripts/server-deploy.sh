@@ -54,12 +54,23 @@ health_url="http://127.0.0.1:${host_port}${base_path}/api/health"
 home_url="http://127.0.0.1:${host_port}${base_path}"
 
 echo "Checking ${health_url}"
-if curl -fsS "$health_url" >/dev/null; then
-  echo "Health check passed: ${health_url}"
-else
-  echo "Health endpoint failed, checking home page: ${home_url}"
-  curl -fsSI "$home_url" >/dev/null
-  echo "Home page check passed: ${home_url}"
-fi
+for attempt in $(seq 1 30); do
+  if curl -fsS "$health_url" >/dev/null; then
+    echo "Health check passed: ${health_url}"
+    docker compose --env-file "$ENV_FILE" ps
+    exit 0
+  fi
 
-docker compose --env-file "$ENV_FILE" ps
+  if curl -fsSI "$home_url" >/dev/null; then
+    echo "Home page check passed: ${home_url}"
+    docker compose --env-file "$ENV_FILE" ps
+    exit 0
+  fi
+
+  echo "Service is not ready yet (${attempt}/30)."
+  sleep 2
+done
+
+echo "Service did not become ready. Recent container logs:"
+docker compose --env-file "$ENV_FILE" logs --tail=120 workbench || true
+exit 1
