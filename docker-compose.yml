@@ -33,7 +33,7 @@ services:
       CONTENT_REPO_DIR: /app
       BACKUP_DIR: /app/backups
     ports:
-      - "127.0.0.1:${HOST_PORT:-3000}:3000"
+      - "${HOST_BIND:-127.0.0.1}:${HOST_PORT:-3000}:3000"
     volumes:
       - ${WORKBENCH_DATA_MOUNT:-workbench-data}:/app/data
       - ${WORKBENCH_GENERATED_MOUNT:-workbench-generated}:/app/.generated/knowledge

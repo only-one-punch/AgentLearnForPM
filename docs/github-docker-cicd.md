@@ -96,6 +96,7 @@ APP_URL=http://118.145.157.107:3322/agent-pm
 NEXT_PUBLIC_APP_URL=http://118.145.157.107:3322/agent-pm
 BETTER_AUTH_URL=http://118.145.157.107:3322/agent-pm
 NEXT_PUBLIC_BASE_PATH=/agent-pm
+HOST_BIND=127.0.0.1
 HOST_PORT=3322
 ```
 
@@ -111,6 +112,7 @@ no_proxy=localhost,127.0.0.1
 ```
 
 如果你要挂到已有 Nginx 的 `/agent-pm` 路径下，`NEXT_PUBLIC_BASE_PATH=/agent-pm` 要保留。
+如果 Nginx 在另一个 Docker 容器里，需要让它访问宿主机端口，可以把服务器上的 `HOST_BIND` 改成 `0.0.0.0`。
 
 ## 5. 手动跑一次部署
 
