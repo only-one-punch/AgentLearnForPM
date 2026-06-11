@@ -7,9 +7,10 @@
 # =========================
 
 # FROM 选择基础镜像。
-# node:22-alpine 表示：使用已经装好 Node.js 22 的 Alpine Linux 小系统。
+# node:22-bookworm-slim 表示：使用已经装好 Node.js 22 的 Debian 精简系统。
+# 它比 Alpine 稍大，但不需要 apk 安装额外兼容包，服务器构建更稳定。
 # AS base 给这个阶段起名叫 base，后面的 deps/builder 阶段可以复用它。
-FROM node:22-alpine AS base
+FROM node:22-bookworm-slim AS base
 
 # WORKDIR 类似在容器里执行 cd /app。
 # 如果 /app 不存在，Docker 会自动创建。
@@ -20,13 +21,6 @@ WORKDIR /app
 # NEXT_TELEMETRY_DISABLED=1 用来关闭 Next.js 匿名遥测。
 # 这个变量会存在于后续从 base 继承的阶段里。
 ENV NEXT_TELEMETRY_DISABLED=1
-
-# RUN 表示构建镜像时执行命令。
-# apk 是 Alpine Linux 的包管理器，类似 Ubuntu 里的 apt。
-# --no-cache 表示安装后不保留 apk 索引缓存，减少镜像体积。
-# libc6-compat 提供 glibc 兼容层，一些 Node 原生依赖可能需要。
-# 这里只保留 libc6-compat，避免在构建阶段安装不必要的系统工具。
-RUN apk add --no-cache libc6-compat
 
 # =========================
 # 2. deps 阶段：安装项目依赖
@@ -91,9 +85,9 @@ RUN npm run build
 # 4. runner 阶段：最终运行镜像
 # =========================
 
-# 最终镜像重新从 node:22-alpine 开始，而不是直接使用 builder。
+# 最终镜像重新从 node:22-bookworm-slim 开始，而不是直接使用 builder。
 # 好处是最终镜像更干净，只包含运行需要的文件，不包含完整源码和构建缓存。
-FROM node:22-alpine AS runner
+FROM node:22-bookworm-slim AS runner
 
 # 最终容器启动后也在 /app 下工作。
 WORKDIR /app
@@ -128,14 +122,11 @@ ENV GENERATED_CONTENT_DIR=/app/.generated/knowledge
 # 注意：Next.js 静态资源路径仍然主要由 build 阶段的 NEXT_PUBLIC_BASE_PATH 决定。
 ENV NEXT_PUBLIC_BASE_PATH=
 
-# 安装最终运行阶段需要的少量系统工具。
-# wget：Docker healthcheck 用它请求本机健康检查 URL。
-# addgroup/adduser：创建非 root 用户 nextjs。
+# 创建非 root 用户 nextjs。
 # mkdir：创建数据、备份和生成内容目录。
 # chown：把 /app 目录权限交给 nextjs 用户，避免运行时写入权限问题。
-RUN apk add --no-cache wget && \
-  addgroup --system --gid 1001 nodejs && \
-  adduser --system --uid 1001 nextjs && \
+RUN groupadd --system --gid 1001 nodejs && \
+  useradd --system --uid 1001 --gid nodejs --home-dir /app --shell /usr/sbin/nologin nextjs && \
   mkdir -p /app/data /app/backups /app/.generated/knowledge && \
   chown -R nextjs:nodejs /app
 

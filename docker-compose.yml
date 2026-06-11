@@ -32,7 +32,7 @@ services:
       - ${WORKBENCH_GENERATED_MOUNT:-workbench-generated}:/app/.generated/knowledge
       - ${WORKBENCH_BACKUP_MOUNT:-./backups}:/app/backups
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- \"http://127.0.0.1:3000$${NEXT_PUBLIC_BASE_PATH:-}/api/health\" >/dev/null 2>&1 || wget -qO- \"http://127.0.0.1:3000$${NEXT_PUBLIC_BASE_PATH:-}/login\" >/dev/null 2>&1"]
+      test: ["CMD", "node", "scripts/docker-healthcheck.mjs"]
       interval: 30s
       timeout: 5s
       retries: 5
