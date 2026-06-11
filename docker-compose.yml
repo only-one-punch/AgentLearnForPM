@@ -3,9 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      network: host
       args:
         NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
         NPM_CONFIG_REGISTRY: ${NPM_CONFIG_REGISTRY:-}
+        HTTP_PROXY: ${HTTP_PROXY:-}
+        HTTPS_PROXY: ${HTTPS_PROXY:-}
+        NO_PROXY: ${NO_PROXY:-}
+        http_proxy: ${http_proxy:-}
+        https_proxy: ${https_proxy:-}
+        no_proxy: ${no_proxy:-}
     image: agent-pm-knowledge-workbench:latest
     container_name: agent-pm-knowledge-workbench
     restart: unless-stopped

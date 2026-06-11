@@ -99,6 +99,17 @@ NEXT_PUBLIC_BASE_PATH=/agent-pm
 HOST_PORT=3322
 ```
 
+如果服务器需要通过本机 Mihomo/Clash 访问 GitHub 或 npm，可以额外加：
+
+```env
+HTTP_PROXY=http://127.0.0.1:7890
+HTTPS_PROXY=http://127.0.0.1:7890
+NO_PROXY=localhost,127.0.0.1
+http_proxy=http://127.0.0.1:7890
+https_proxy=http://127.0.0.1:7890
+no_proxy=localhost,127.0.0.1
+```
+
 如果你要挂到已有 Nginx 的 `/agent-pm` 路径下，`NEXT_PUBLIC_BASE_PATH=/agent-pm` 要保留。
 
 ## 5. 手动跑一次部署

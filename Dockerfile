@@ -35,6 +35,15 @@ FROM base AS deps
 # 默认空字符串，表示使用 npm 默认 registry。
 ARG NPM_CONFIG_REGISTRY=
 
+# 这些代理变量只在构建期使用。
+# 服务器如果需要通过 Mihomo/Clash 下载 npm 包或原生依赖，可以从 docker-compose.yml 传进来。
+ARG HTTP_PROXY=
+ARG HTTPS_PROXY=
+ARG NO_PROXY=
+ARG http_proxy=
+ARG https_proxy=
+ARG no_proxy=
+
 # 只先复制 npm 依赖声明文件，不复制全部源码。
 # 这样只要 package.json/package-lock.json 没变，npm ci 这一层就能复用 Docker 缓存。
 COPY package.json package-lock.json ./
